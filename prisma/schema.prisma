@@ -1,0 +1,500 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  goals            Goal[]
+  milestones       Milestone[]
+  habits           Habit[]
+  habitLogs        HabitLog[]
+  workouts         Workout[]
+  bodyWeights      BodyWeight[]
+  nutritionLogs    NutritionLog[]
+  sleepRecords     SleepRecord[]
+  recoveryRecords  RecoveryRecord[]
+  whoopMetrics     WhoopMetric[]
+  assignments      Assignment[]
+  grades           Grade[]
+  uniApplications  UniversityApplication[]
+  courses          Course[]
+  learningItems    LearningItem[]
+  notes            Note[]
+  journalEntries   JournalEntry[]
+  knowledgeItems   KnowledgeItem[]
+  integrations     Integration[]
+  aiConversations  AIConversation[]
+  memoryRecords    MemoryRecord[]
+  suppliers        Supplier[]
+  manufacturers    Manufacturer[]
+  products         Product[]
+  collections      Collection[]
+  samples          Sample[]
+  launches         Launch[]
+  businessMetrics  BusinessMetric[]
+  analyticsRecords AnalyticsRecord[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Goal {
+  id          String      @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  category    String
+  timeframe   String
+  status      String      @default("active")
+  progress    Float       @default(0)
+  targetDate  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones  Milestone[]
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  goalId      String
+  userId      String
+  title       String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id          String     @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  frequency   String
+  category    String?
+  color       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs        HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  userId    String
+  date      DateTime
+  completed Boolean  @default(false)
+  notes     String?
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([habitId, date])
+}
+
+model Workout {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  type      String
+  duration  Int
+  calories  Int?
+  notes     String?
+  date      DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BodyWeight {
+  id        String   @id @default(cuid())
+  userId    String
+  weight    Float
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NutritionLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  calories  Int?
+  protein   Float?
+  carbs     Float?
+  fat       Float?
+  water     Float?
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SleepRecord {
+  id        String    @id @default(cuid())
+  userId    String
+  date      DateTime
+  bedtime   DateTime?
+  wakeTime  DateTime?
+  duration  Float?
+  quality   Int?
+  notes     String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RecoveryRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  score     Float?
+  hrv       Float?
+  restingHR Float?
+  notes     String?
+  source    String   @default("manual")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WhoopMetric {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  recovery  Float?
+  strain    Float?
+  sleep     Float?
+  hrv       Float?
+  restingHR Float?
+  rawData   Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Assignment {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  module    String
+  type      String
+  dueDate   DateTime?
+  weight    Float?
+  grade     Float?
+  status    String    @default("pending")
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  userId    String
+  module    String
+  year      Int
+  grade     Float
+  credits   Int?
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UniversityApplication {
+  id          String    @id @default(cuid())
+  userId      String
+  university  String
+  programme   String
+  type        String
+  status      String    @default("researching")
+  deadline    DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  provider  String?
+  category  String?
+  status    String    @default("active")
+  progress  Float     @default(0)
+  startDate DateTime?
+  endDate   DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LearningItem {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  type        String
+  category    String?
+  status      String    @default("want")
+  rating      Int?
+  notes       String?
+  url         String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  tags      String[]
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  type      String   @default("daily")
+  content   String
+  mood      Int?
+  energy    Int?
+  tags      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeItem {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  category  String?
+  tags      String[]
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  hub       String
+  messages  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MemoryRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String
+  key       String
+  value     Json
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, category, key])
+}
+
+model Integration {
+  id           String    @id @default(cuid())
+  userId       String
+  provider     String
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  scope        String?
+  enabled      Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, provider])
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  type      String
+  country   String?
+  city      String?
+  contact   String?
+  email     String?
+  phone     String?
+  website   String?
+  status    String   @default("prospect")
+  moq       Int?
+  leadTime  Int?
+  notes     String?
+  tags      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  samples   Sample[]
+}
+
+model Manufacturer {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String
+  country      String?
+  city         String?
+  contact      String?
+  email        String?
+  phone        String?
+  website      String?
+  status       String    @default("prospect")
+  moq          Int?
+  leadTime     Int?
+  capabilities String[]
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products     Product[]
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  userId         String
+  manufacturerId String?
+  sku            String
+  name           String
+  colour         String
+  construction   String
+  fit            String
+  size           String
+  gsm            Int?
+  cotton         String?
+  costPrice      Float?
+  sellPrice      Float?
+  margin         Float?
+  status         String        @default("development")
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  manufacturer   Manufacturer? @relation(fields: [manufacturerId], references: [id])
+  samples        Sample[]
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  season      String?
+  year        Int?
+  status      String   @default("planning")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Sample {
+  id           String    @id @default(cuid())
+  userId       String
+  productId    String?
+  supplierId   String?
+  round        Int       @default(1)
+  status       String    @default("requested")
+  sentDate     DateTime?
+  receivedDate DateTime?
+  feedback     String?
+  cost         Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product?  @relation(fields: [productId], references: [id])
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+}
+
+model Launch {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  type        String
+  status      String    @default("planning")
+  plannedDate DateTime?
+  launchedAt  DateTime?
+  units       Int?
+  revenue     Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BusinessMetric {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  category  String
+  metric    String
+  value     Float
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  hub       String
+  metric    String
+  value     Float
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
