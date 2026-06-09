@@ -13,7 +13,8 @@ export async function saveGymEquipment(items: { name: string; category: string }
 
   await prisma.gymEquipment.deleteMany({ where: { userId: session.user.id } });
   await prisma.gymEquipment.createMany({
-    data: items.map((i) => ({ ...i, userId: session.user!.id, available: true })),
+    data: items.map((i) => ({ ...i, userId: session.user!.id as string, available: true })),
+
   });
 
   revalidatePath("/fitness");
