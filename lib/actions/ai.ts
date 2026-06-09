@@ -9,11 +9,9 @@ const LIFEOS_SYSTEM = `You are LifeOS AI — the personal assistant embedded in 
 ABOUT SHAURYA:
 - 19 years old, second-year Business Management undergraduate at University of York (graduating May 2027)
 - Runs a textile export business between India and UK
-- Returning to India June 2026 to execute Ovier launch
 
 YOUR PERSONALITY:
 - Direct, specific, no filler
-- Reference real Ovier numbers when relevant
 - Challenge assumptions, don't just validate
 - Actionable next steps, not general advice
 - Keep responses concise — this is a chat interface, not an essay`;
@@ -36,22 +34,10 @@ export async function sendAIMessage(
           memories.map((m: any) => `${m.category}/${m.key}: ${JSON.stringify(m.value)}`).join("\n");
       }
     } catch {
-      // Memory fetch failure is non-fatal
+      // non-fatal
     }
   }
 
   const system = LIFEOS_SYSTEM + memoryContext;
-  const result = await callAI(system, messages);
-
-  if (result.success && result.message && session?.user?.id) {
-    prisma.aiConversation.create({
-      data: {
-        userId: session.user.id,
-        hub,
-        messages: [...messages, { role: "assistant", content: result.message }] as object[],
-      },
-    }).catch(() => {});
-  }
-
-  return result;
+  return callAI(system, messages);
 }
