@@ -29,8 +29,14 @@ import {
 } from "recharts";
 import { Dumbbell, Scale, Zap, Plus, Check, TrendingDown, TrendingUp } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { WorkoutPlan } from "@/components/fitness/workout-plan";
+import { WorkoutSession } from "@/components/fitness/workout-session";
+import { GymEquipment } from "@/components/fitness/gym-equipment";
+import { getActivePlan, getTodayWorkout, getGymEquipment } from "@/lib/actions/workout";
 
-type Tab = "overview" | "weight" | "workouts" | "nutrition";
+
+type Tab = "overview" | "weight" | "workouts" | "nutrition" | "plan" | "equipment";
+
 
 export default function FitnessPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -59,6 +65,10 @@ export default function FitnessPage() {
   const [weights, setWeights] = useState<Array<{ weight: number; date: Date; id: string; notes: string | null; userId: string; createdAt: Date }>>([]);
   const [workouts, setWorkouts] = useState<Array<{ id: string; name: string; type: string; duration: number; calories: number | null; date: Date; notes: string | null; userId: string; createdAt: Date }>>([]);
   const [nutrition, setNutrition] = useState<Array<{ id: string; calories: number | null; protein: number | null; carbs: number | null; fat: number | null; water: number | null; date: Date; notes: string | null; userId: string; createdAt: Date }>>([]);
+  const [activePlan, setActivePlan] = useState<any>(null);
+  const [todayWorkout, setTodayWorkout] = useState<any>(null);
+  const [gymEquipment, setGymEquipment] = useState<any[]>([]);
+  const [activeSession, setActiveSession] = useState<any>(null);
   const [stats, setStats] = useState<{
     currentWeight: number | null;
     weeklyWorkouts: number;
@@ -82,6 +92,11 @@ export default function FitnessPage() {
     setWorkouts(wo);
     setNutrition(n);
     setStats(s);
+    const [ap, tw, ge] = await Promise.all([getActivePlan(), getTodayWorkout(), getGymEquipment()]);
+    setActivePlan(ap);
+    setTodayWorkout(tw);
+    setGymEquipment(ge);
+
   }
 
   useEffect(() => {
@@ -164,7 +179,8 @@ export default function FitnessPage() {
       {/* Tabs */}
       <div className="sticky top-[73px] z-20 bg-[#F2EDE4]/90 backdrop-blur border-b border-[#1C2B3A]/10 px-6 py-3">
         <div className="flex gap-2 max-w-6xl mx-auto overflow-x-auto">
-          {(["overview", "weight", "workouts", "nutrition"] as Tab[]).map((t) => (
+          {(["overview", "weight", "workouts", "nutrition", "plan", "equipment"] as Tab[]).map((t) => (
+
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -539,6 +555,17 @@ export default function FitnessPage() {
           </div>
         )}
       </div>
+          {tab === "plan" && (
+            activeSession ? (
+              <WorkoutSession session={activeSession} onComplete={() => { setActiveSession(null); loadData(); }} />
+            ) : (
+              <WorkoutPlan initialPlan={activePlan} todayWorkout={todayWorkout} onSessionStart={setActiveSession} />
+            )
+          )}
+
+          {tab === "equipment" && (
+            <GymEquipment initialEquipment={gymEquipment} />
+          )}
 
       <AIChat hub="fitness" />
     </div>
