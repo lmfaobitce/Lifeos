@@ -18,15 +18,23 @@ async function callGemini(system: string, messages: AIMessage[]): Promise<AIResp
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { success: false, error: "GEMINI_API_KEY not set" };
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction: system });
-    const history = messages.slice(0, -1).map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(messages[messages.length - 1].content);
-    const text = result.response.text();
+    const lastMessage = messages[messages.length - 1].content;
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: system }] },
+        contents: messages.map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        })),
+      }),
+    });
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     return text ? { success: true, message: text, provider: "gemini" } : { success: false, error: "Empty response" };
   } catch (e: any) {
     return { success: false, error: e.message ?? "Gemini error" };
